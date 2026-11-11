@@ -42,3 +42,17 @@ class TestPet:
                 assert response.status_code == 404, "Статус код != 404"
             with allure.step('Проверка текстового содержимого ответа'):
                 assert response.text == 'Pet not found', "Текст ошибки не совпал с ожидаемым"
+
+
+    @allure.title("Добавление нового питомца")
+    def test_add_pet(self):
+        with allure.step("Подготовка данных для создания питомца"):
+            payload = {
+                "id": 1,
+                "name": "Buddy",
+                "status": "available"
+            }
+        with allure.step("Отправка запроса на создание питомца"):
+            response = requests.post(url=f"{BASE_URL}/pet", json=payload)
+        with allure.step('Проверка статуса ответа'):
+            assert response.status_code == 200, "Статус код != 200"
