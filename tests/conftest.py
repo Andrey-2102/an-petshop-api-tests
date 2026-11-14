@@ -1,0 +1,17 @@
+import requests
+import pytest
+
+
+BASE_URL = 'https://petstore.swagger.rv-school.ru/api/v3'
+
+@pytest.fixture(scope="function")
+def create_pet():
+    payload = {
+        "id": 1,
+        "name": "Buddy",
+        "status": "available"
+    }
+    response = requests.post(url=f"{BASE_URL}/pet", json=payload)
+    assert response.status_code == 200, "Статус код != 200"
+    response_json = response.json()
+    return response_json
