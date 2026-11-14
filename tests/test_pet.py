@@ -1,5 +1,7 @@
 import allure
+import jsonschema
 import requests
+from .schemas.pet_schema import PET_SCHEMA
 
 
 BASE_URL = 'https://petstore.swagger.rv-school.ru/api/v3'
@@ -42,3 +44,57 @@ class TestPet:
                 assert response.status_code == 404, "Статус код != 404"
             with allure.step('Проверка текстового содержимого ответа'):
                 assert response.text == 'Pet not found', "Текст ошибки не совпал с ожидаемым"
+
+
+    @allure.title("Добавление нового питомца")
+    def test_add_pet(self):
+        with allure.step("Подготовка данных для создания питомца"):
+            payload = {
+                "id": 1,
+                "name": "Buddy",
+                "status": "available"
+            }
+        with allure.step("Отправка запроса на создание питомца"):
+            response = requests.post(url=f"{BASE_URL}/pet", json=payload)
+            response_json = response.json()
+        with allure.step('Проверка статуса ответа'):
+            assert response.status_code == 200, "Статус код != 200"
+            jsonschema.validate(response_json, PET_SCHEMA)
+        with allure.step("Проверка параметров питомца в ответе"):
+            assert response_json["id"] == payload["id"], "Идентификатор питомца не совпадает с ожидаемым"
+            assert response_json["name"] == payload["name"], "Имя питомца не совпадает с ожидаемым"
+            assert response_json["status"] == payload["status"], "Статус питомца не совпадает с ожидаемым"
+
+
+    @allure.title("Добавление нового питомца c полными данными")
+    def test_add_full_pet(self):
+        with allure.step("Подготовка данных для создания питомца с полными данными"):
+            payload = {
+                "id": 10,
+                "name": "doggie",
+                "category": {
+                    "id": 1,
+                    "name": "Dogs"
+                },
+                "photoUrls": ["string"],
+                "tags": [{
+                    "id": 0,
+                    "name": "string"
+                }],
+                "status": "available"
+            }
+        with allure.step("Отправка запроса на добавление нового питомца с полными данными"):
+            response = requests.post(url=f"{BASE_URL}/pet", json=payload)
+            response_json = response.json()
+        with allure.step('Проверка статуса ответа'):
+            assert response.status_code == 200, "Статус код != 200"
+            jsonschema.validate(response_json, PET_SCHEMA)
+        with allure.step("Проверка параметров питомца в ответе"):
+            assert response_json["id"] == payload["id"], "Идентификатор питомца не совпадает с ожидаемым"
+            assert response_json["name"] == payload["name"], "Имя питомца не совпадает с ожидаемым"
+            assert response_json["category"]["id"] == payload["category"]["id"], "Идентификатор категории питомца не совпадает с ожидаемым"
+            assert response_json["category"]["name"] == payload["category"]["name"], "Наименование категории питомца не совпадает с ожидаемым"
+            assert response_json["photoUrls"] == payload["photoUrls"], "Фото питомца не совпадает с ожидаемым"
+            assert response_json["tags"][0]["id"] == payload["tags"][0]["id"], "Идентификатор тега питомца не совпадает с ожидаемым"
+            assert response_json["tags"][0]["name"] == payload["tags"][0]["name"], "Наименование тега питомца не совпадает с ожидаемым"
+            assert response_json["status"] == payload["status"], "Статус питомца не совпадает с ожидаемым"
