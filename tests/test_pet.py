@@ -1,6 +1,7 @@
 import allure
 import jsonschema
 import requests
+import pytest
 from .schemas.pet_schema import PET_SCHEMA
 
 
@@ -136,3 +137,17 @@ class TestPet:
         with allure.step("Проверка ответа для созданного питомца"):
             assert response.status_code == 200, "Статус код != 200"
             assert response.text == "Pet deleted", f"Текст ответа '{response.text}' не соответствует ожидаемому 'Pet deleted'"
+
+
+    @allure.title("Получение списка питомцев по статусу")
+    @pytest.mark.parametrize("status, expected_status_code", [("available", 200), ("pending", 200), ("sold", 200), ("-", 400),])
+    def test_get_list_pet_by_status(self, status, expected_status_code):
+        with allure.step(f"Отправка запроса на получение списка питомцев по статусу {status}"):
+            response = requests.get(f"{BASE_URL}/pet/findByStatus", params={"status": status})
+        with allure.step("Проверка статуса ответа и формата данных"):
+            assert response.status_code == expected_status_code
+            if "message" in response.json():
+                assert response.json()["code"] == expected_status_code
+                assert response.json()["message"] == "Input error: query parameter `status value `-` is not in the allowable values `[available, pending, sold]`"
+            else:
+                assert isinstance(response.json(), list)
